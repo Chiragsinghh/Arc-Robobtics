@@ -11,18 +11,32 @@ export default defineType({
       type: "string",
       validation: (Rule) => Rule.required(),
     }),
+
+    defineField({
+      name: "slug",
+      title: "Slug",
+      type: "slug",
+      options: {
+        source: "title",
+        maxLength: 96,
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+
     defineField({
       name: "date",
       title: "Event Date",
       type: "date",
       validation: (Rule) => Rule.required(),
     }),
+
     defineField({
       name: "description",
       title: "Short Description",
       type: "text",
       rows: 3,
     }),
+
     defineField({
       name: "image",
       title: "Optional Image",
@@ -32,6 +46,7 @@ export default defineType({
       },
     }),
   ],
+
   orderings: [
     {
       title: "Newest first",
@@ -39,5 +54,4 @@ export default defineType({
       by: [{ field: "date", direction: "desc" }],
     },
   ],
-  
 });

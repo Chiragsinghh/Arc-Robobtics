@@ -1,25 +1,33 @@
 import { getEventBySlug } from "../../../sanity/lib/queries";
 import { PortableText } from "@portabletext/react";
+import { notFound } from "next/navigation";
 
 export default async function EventPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const event = await getEventBySlug(params.slug);
+  // In Next.js 15, params is a Promise that must be awaited
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
+
+  // 🔒 Guard: slug must exist
+  if (!slug) {
+    notFound();
+  }
+
+  const event = await getEventBySlug(slug);
+  
+  // This will now log the actual event data to your terminal instead of undefined
+  console.log(event);
 
   if (!event) {
-    return (
-      <div className="px-8 py-32">
-        Event not found.
-      </div>
-    );
+    notFound();
   }
 
   return (
     <main className="px-8 py-32">
       <div className="max-w-3xl mx-auto space-y-8">
-
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">
             {event.title}
