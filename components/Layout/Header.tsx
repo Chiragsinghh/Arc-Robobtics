@@ -1,45 +1,28 @@
 "use client";
-
-import Link from "next/link";
+import ThemeToggle from "../ui/ThemeToggle";
 
 export default function Header() {
   return (
-    <header className="w-full px-8 py-6 border-b border-neutral-200 dark:border-neutral-800">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        
-        {/* Logo / Identity */}
-        <Link
-          href="/"
-          className="text-lg font-medium tracking-tight"
-        >
+    /* Removed border-b and added a subtle glass blur */
+    <header className="fixed top-0 left-0 w-full z-[100] bg-[var(--bg)]/40 backdrop-blur-xl px-8 py-5 flex justify-between items-center transition-all duration-300">
+      <div className="flex items-center gap-2">
+        <h1 className="robotic-hover text-[var(--text)] font-bold uppercase tracking-tighter cursor-default">
           ARC Robotics
-        </Link>
-
-        {/* Navigation */}
-        <nav className="flex items-center gap-8 text-sm">
-  <a href="#systems" className="opacity-80 hover:opacity-100 transition-opacity">
-    Systems
-  </a>
-
-  <a href="#knowledge" className="opacity-80 hover:opacity-100 transition-opacity">
-    Knowledge
-  </a>
-
-  <a href="#about" className="opacity-80 hover:opacity-100 transition-opacity">
-    About
-  </a>
-
-  <a href="#events" className="opacity-50 cursor-not-allowed">
-    Events
-  </a>
-
-  <a href="#team" className="opacity-50 cursor-not-allowed">
-    Team
-  </a>
-</nav>
-
-
+        </h1>
       </div>
+
+      <nav className="flex items-center gap-8">
+        <div className="hidden md:flex gap-8 text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          <a href="#systems" className="hover:text-[var(--accent-primary)] transition-colors">Systems</a>
+          <a href="#philosophy" className="hover:text-[var(--accent-primary)] transition-colors">Philosophy</a>
+          <a href="#team" className="hover:text-[var(--accent-primary)] transition-colors">Team</a>
+        </div>
+        
+        {/* Theme Toggle integrated directly into the header */}
+        <div className="pl-4 border-l border-[var(--line)]/30">
+          <ThemeToggle isHeaderVariant={true} />
+        </div>
+      </nav>
     </header>
   );
 }
