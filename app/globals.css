@@ -2,53 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ======================================================
+   ARC ROBOTICS — LIGHT, ENGINEERING-FIRST SYSTEM
+====================================================== */
+
 @layer base {
   :root {
-    /* --- ARC Robotics Custom Variables (Light) --- */
-    --bg: #f8fafc;           /* Main Background */
-    --bg-soft: #f1f5f9;      /* Modular Background */
-    --text: #0f172a;         /* Deep Navy Text */
-    --text-muted: #64748b;   /* Slate Muted Text */
-    --line: #e2e8f0;         /* Blueprint Line Color */
-    --accent-primary: #2563eb; /* Robotics Blue */
-    --accent-glow: rgba(37, 99, 235, 0.1);
-    --grid-node: #cbd5e1;    /* DotGrid base color */
+    /* --- ARC Core (Light) --- */
+    --bg: #f9fafb;
+    --bg-soft: #f1f5f9;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --line: #e2e8f0;
 
-    /* --- Shadcn UI Variables (Light) --- */
+    --accent-primary: #2563eb;
+    --accent-soft: rgba(37, 99, 235, 0.08);
+    --warm-bg: #fefaf5;
+--warm-line: #e7dfd6;
+
+--accent-amber: #d97706;
+--accent-amber-soft: rgba(217, 119, 6, 0.12);
+
+--accent-sage: #0f766e;
+--accent-sage-soft: rgba(15, 118, 110, 0.08);
+
+
+    /* --- shadcn compatibility (Light) --- */
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 221 83% 53%; /* Matches ARC Blue */
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 221 83% 53%;
     --radius: 0.5rem;
   }
 
+  /* Optional dark mode — calm, not dramatic */
   .dark {
-    /* --- ARC Robotics Custom Variables (Dark) --- */
-    --bg: #020617;           /* Deep Space Navy */
-    --bg-soft: #0f172a;      /* Modular Navy */
-    --text: #f8fafc;         /* Off-White Text */
-    --text-muted: #94a3b8;   /* Muted Slate */
-    --line: #1e293b;         /* Darker Blueprint Lines */
-    --accent-primary: #3b82f6; /* Brighter Blue for Contrast */
-    --accent-glow: rgba(59, 130, 246, 0.15);
-    --grid-node: #1e293b;    /* DotGrid base color */
+    --bg: #020617;
+    --bg-soft: #0f172a;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --line: #1e293b;
 
-    /* --- Shadcn UI Variables (Dark) --- */
+    --accent-primary: #3b82f6;
+    --accent-soft: rgba(59, 130, 246, 0.12);
+
     --background: 222 47% 4%;
     --foreground: 0 0% 98%;
     --card: 222 47% 4%;
@@ -63,66 +75,102 @@
     --muted-foreground: 215 20% 65%;
     --accent: 217 32% 17%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
     --border: 217 32% 17%;
     --input: 217 32% 17%;
     --ring: 224 76% 48%;
+
+    --warm-bg: #0b0a08;
+--warm-line: #2a261f;
+
+--accent-amber: #f59e0b;
+--accent-amber-soft: rgba(245, 158, 11, 0.14);
+
+--accent-sage: #5eead4;
+--accent-sage-soft: rgba(94, 234, 212, 0.12);
+
   }
 }
+
+/* ======================================================
+   BASE ELEMENTS
+====================================================== */
 
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    background: var(--bg);
+    color: var(--text);
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
-/* --- Engineering Pattern Components --- */
+/* ======================================================
+   TYPOGRAPHY UTILITIES
+====================================================== */
 
-.bg-blueprint {
-  background-color: var(--bg);
-  background-image: 
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 50px 50px;
-  transition: background-color 0.3s ease, background-image 0.3s ease;
+.text-muted {
+  color: var(--text-muted);
 }
 
-.scanlines::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.02) 50%);
-  background-size: 100% 4px;
-  pointer-events: none;
-  z-index: 10;
+/* ======================================================
+   ENGINEERING STRUCTURAL UTILITIES
+====================================================== */
+
+/* Thin technical divider */
+.hr {
+  height: 1px;
+  width: 100%;
+  background: var(--line);
 }
 
-.section-accent {
-  border-left: 4px solid var(--accent-primary);
-  background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%);
+/* Subtle left system marker */
+.section-marker {
+  border-left: 3px solid var(--accent-primary);
+  padding-left: 1.5rem;
 }
 
-/* Update this section in your globals.css */
-.robotic-hover:hover {
-  /* Changed --accent to --accent-primary to match new variables */
-  text-shadow: 2px 0 var(--accent-primary), -2px 0 #ff4d4d;
-  animation: glitch 0.3s infinite;
+/* ======================================================
+   HERO TITLE BOOT ANIMATION (ONE-TIME)
+====================================================== */
+
+@keyframes heroBoot {
+  0% {
+    transform: translateY(28px) scale(1.25);
+    letter-spacing: 0.02em;
+  }
+  45% {
+    transform: translateY(10px) scale(0.96);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    letter-spacing: 0;
+  }
 }
 
-/* Ensure the Header text is visible in both modes */
-header, .header-text {
-  color: var(--text);
-  transition: color 0.3s ease;
+.hero-title {
+  animation: heroBoot 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-@keyframes glitch {
-  0% { transform: translate(0); }
-  20% { transform: translate(-1px, 1px); }
-  60% { transform: translate(1px, -1px); }
-  100% { transform: translate(0); }
+/* ======================================================
+   DEPTH GRID MOTION (BACKGROUND ONLY)
+====================================================== */
+
+@keyframes gridDrift {
+  from {
+    transform: rotateX(65deg) translateY(0) translateZ(-220px);
+  }
+  to {
+    transform: rotateX(65deg) translateY(120px) translateZ(-220px);
+  }
+}
+
+.animate-grid-drift {
+  animation: gridDrift 22s linear infinite;
 }
