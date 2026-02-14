@@ -16,6 +16,10 @@ export default function Header() {
           <a href="#systems" className="hover:text-[var(--accent-primary)] transition-colors">Systems</a>
           <a href="#philosophy" className="hover:text-[var(--accent-primary)] transition-colors">Philosophy</a>
           <a href="#team" className="hover:text-[var(--accent-primary)] transition-colors">Team</a>
+          <a href="/knowledge" className="opacity-80 hover:opacity-100 transition-opacity">
+  Knowledge
+</a>
+
         </div>
         
         {/* Theme Toggle integrated directly into the header */}

@@ -23,10 +23,12 @@ export async function getEvents() {
       title,
       date,
       description,
+      image,
       "slug": slug.current
     }
   `);
 }
+
 
 export async function getEventBySlug(slug: string) {
   return sanityClient.fetch(
@@ -35,12 +37,13 @@ export async function getEventBySlug(slug: string) {
       title,
       date,
       description,
-      content,
+      image,
       "slug": slug.current
     }`,
     { slug }
   );
 }
+
 
 /* ---------------- KNOWLEDGE ---------------- */
 

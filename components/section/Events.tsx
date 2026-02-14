@@ -1,127 +1,204 @@
-import FadeIn from "../ui/FadeIn";
-import { getEvents } from "../../sanity/lib/queries";
-import Link from "next/link";
+"use client";
 
-export default async function Events() {
-  const events = await getEvents();
+import { useEffect, useRef, useState } from "react";
+import { getEvents } from "../../sanity/lib/queries";
+import { urlFor } from "../../sanity/lib/image";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface SanityEvent {
+  _id: string;
+  title: string;
+  description: string;
+  date: string;
+  image: any;
+}
+
+export default function Events() {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [events, setEvents] = useState<SanityEvent[]>([]);
+  const [activeHoverIndex, setActiveHoverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      const data = await getEvents();
+      setEvents(data);
+    }
+    fetchData();
+  }, []);
+
+  // Infinite Scroll Illusion
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !events.length) return;
+    const handleScroll = () => {
+      const totalWidth = el.scrollWidth / 2;
+      if (el.scrollLeft <= 0) el.scrollLeft = totalWidth;
+      if (el.scrollLeft >= totalWidth) el.scrollLeft = 1;
+    };
+    el.addEventListener("scroll", handleScroll);
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [events]);
+
+  // Horizontal Scroll with Wheel
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY === 0) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  if (!events.length) return null;
+
+  const duplicated = [...events, ...events];
 
   return (
-    <section id="events" className="px-8 py-32">
-      <div className="max-w-6xl mx-auto space-y-12">
+    <section className="relative min-h-screen py-32 bg-[#000926] text-white overflow-hidden">
+      
+      {/* BACKGROUND ACCENT */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#0F52BA] opacity-[0.03] blur-[120px] pointer-events-none" />
 
-        {/* Heading */}
-        <FadeIn>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-            Events & Activities
+      <div className="max-w-7xl mx-auto px-10 md:px-20">
+        
+        {/* HEADER */}
+        <div className="mb-20 space-y-6 max-w-2xl relative z-20">
+          <motion.div 
+             initial={{ width: 0 }}
+             whileInView={{ width: "48px" }}
+             className="h-[2px] bg-[#0F52BA]" 
+          />
+          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight">
+            Arc Journey
           </h2>
-        </FadeIn>
-
-        {/* Empty state */}
-        {(!events || events.length === 0) && (
-          <p className="text-sm opacity-60">
-            Events will appear here as activities are documented.
+          <p className="text-slate-400 text-lg leading-relaxed">
+            Chronological milestones of workshops, experiments, and 
+            collaborative builds that shaped our robotics ecosystem.
           </p>
-        )}
+        </div>
 
-        {/* Timeline */}
-        {events && events.length > 0 && (
-          <div className="relative">
+        {/* TIMELINE TRACK */}
+        <div className="relative [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          
+          {/* THE FAINT LINE */}
+          <div className="absolute top-[160px] left-0 w-full h-[1px] bg-white/10 z-0" />
 
-            {/* Horizontal line */}
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-neutral-200 dark:bg-neutral-800" />
+          <div
+            ref={scrollRef}
+            className="
+              flex gap-20
+              overflow-x-auto
+              overflow-y-visible 
+              scrollbar-hide
+              pt-40
+              pb-80
+              relative
+              snap-x
+            "
+          >
+            {duplicated.map((event, index) => {
+              const isHovered = activeHoverIndex === index;
 
-            {/* Scroll container */}
-            <div
-              className="
-                relative flex gap-12
-                overflow-x-auto
-                pb-10 pt-10
-                scroll-smooth
-              "
-            >
-              {events.map((event: any) =>
-                event.slug ? (
-                  <Link
-                    key={event._id}
-                    href={`/events/${event.slug}`}
+              return (
+                <div
+                  key={`${event._id}-${index}`}
+                  className="relative min-w-[300px] flex flex-col items-center snap-center group"
+                  /* TRIGGERED BY ENTIRE COLUMN */
+                  onMouseEnter={() => setActiveHoverIndex(index)}
+                  onMouseLeave={() => setActiveHoverIndex(null)}
+                >
+                  
+                  {/* INTERACTIVE DOT */}
+                  <motion.div
+                    animate={{
+                      scale: isHovered ? 1.4 : 1,
+                      backgroundColor: isHovered ? "#0F52BA" : "#1e293b",
+                    }}
                     className="
-                      group relative min-w-[220px]
-                      flex flex-col items-start
-                      hover:cursor-pointer
+                      w-3 h-3
+                      rounded-full
+                      relative z-10
+                      ring-8 ring-[#000926]
+                      transition-all duration-300
                     "
                   >
-                    {/* Timeline node */}
-                    <div className="w-3 h-3 rounded-full bg-background border border-accent z-10" />
+                    {isHovered && (
+                      <div className="absolute inset-0 rounded-full bg-[#0F52BA] animate-ping opacity-30" />
+                    )}
+                  </motion.div>
 
-                    {/* Event card */}
-                    <div
-                      className="
-                        mt-6 space-y-2
-                        transition-all duration-300
-                        group-hover:-translate-y-1
-                      "
+                  {/* DATE & TITLE */}
+                  <div className="mt-10 text-center space-y-2 cursor-pointer">
+                    <motion.div 
+                      animate={{ color: isHovered ? "#0F52BA" : "rgba(148, 163, 184, 1)" }}
+                      className="text-[10px] font-mono tracking-widest uppercase"
                     >
-                      {/* Date */}
-                      <div className="text-xs opacity-60">
-                        {new Date(event.date).toLocaleDateString("en-US", {
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </div>
-
-                      {/* Title */}
-                      <div className="font-medium text-sm">
-                        {event.title}
-                      </div>
-
-                      {/* Hover preview */}
-                      <p
-                        className="
-                          text-xs opacity-0 max-h-0
-                          group-hover:opacity-70
-                          group-hover:max-h-24
-                          transition-all duration-300
-                          overflow-hidden
-                        "
-                      >
-                        {event.description}
-                      </p>
-                    </div>
-                  </Link>
-                ) : (
-                  /* Fallback if slug is missing */
-                  <div
-                    key={event._id}
-                    className="
-                      group relative min-w-[220px]
-                      flex flex-col items-start
-                      opacity-50 cursor-not-allowed
-                    "
-                  >
-                    <div className="w-3 h-3 rounded-full bg-background border border-neutral-400 z-10" />
-
-                    <div className="mt-6 space-y-2">
-                      <div className="text-xs opacity-60">
-                        {new Date(event.date).toLocaleDateString("en-US", {
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </div>
-
-                      <div className="font-medium text-sm">
-                        {event.title}
-                      </div>
-
-                      <p className="text-xs opacity-60">
-                        Details coming soon
-                      </p>
-                    </div>
+                      {new Date(event.date).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </motion.div>
+                    <motion.div 
+                      animate={{ y: isHovered ? -2 : 0 }}
+                      className={`text-xl font-medium tracking-tight transition-colors duration-300 ${isHovered ? 'text-[#0F52BA]' : 'text-white'}`}
+                    >
+                      {event.title}
+                    </motion.div>
                   </div>
-                )
-              )}
-            </div>
+
+                  {/* IMAGE CARD (Glassmorphism + Systems Style) */}
+                  <div className="relative w-full mt-6 h-0 flex justify-center">
+                    <AnimatePresence>
+                      {isHovered && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20, perspective: 1200, rotateX: -10 }}
+                          animate={{ opacity: 1, y: 15, rotateX: 0 }}
+                          exit={{ opacity: 0, y: 10, transition: { duration: 0.2 } }}
+                          className="
+                            absolute
+                            top-0
+                            w-72
+                            bg-[#0B1228]/95
+                            backdrop-blur-sm
+                            border border-white/10
+                            rounded-2xl
+                            p-2
+                            shadow-[0_20px_50px_rgba(0,0,0,0.6)]
+                            z-[100]
+                            pointer-events-none
+                          "
+                        >
+                          {event.image && (
+                            <div className="relative overflow-hidden rounded-xl">
+                              <img
+                                src={urlFor(event.image).width(400).url()}
+                                alt={event.title}
+                                className="w-full h-40 object-cover opacity-90"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1228] via-transparent to-transparent opacity-60" />
+                            </div>
+                          )}
+                          <div className="p-4">
+                            <p className="text-xs leading-relaxed text-slate-400">
+                              {event.description}
+                            </p>
+                          </div>
+                          
+                          {/* Accent line on bottom of card */}
+                          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-[#0F52BA]" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
 
       </div>
     </section>

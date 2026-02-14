@@ -1,59 +1,71 @@
-import Reveal from "../ui/Reveal";
+"use client";
 
 export default function Philosophy() {
   return (
     <section
       id="about"
       className="
-        px-8 py-32
-        bg-[var(--warm-bg)]
-        transition-colors
+        relative px-8 py-40
+        bg-[#E2E8F0]
+        dark:bg-[#000926]
+        text-[#0B1020]
+        dark:text-white
       "
     >
-      <div className="max-w-4xl mx-auto space-y-14">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-24 items-start">
+        
+        {/* LEFT */}
+        <div className="space-y-8">
+          <div className="w-12 h-[2px] bg-[#0F52BA]" />
 
-        {/* Section header */}
-        <Reveal>
-          <div
-            className="
-              pl-6
-              border-l-4
-              border-[var(--accent-amber)]
-            "
-          >
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-[var(--text)]">
-              How we work
-            </h2>
+          <h2 className="text-4xl md:text-5xl font-semibold leading-tight tracking-tight">
+            We engineer <br />
+            complete systems.
+          </h2>
+
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-md">
+            ARC Robotics operates as an integrated engineering lab —
+            not a collection of isolated experiments.
+          </p>
+        </div>
+
+        {/* RIGHT */}
+        <div className="space-y-16">
+
+          <div className="space-y-4">
+            <h3 className="text-sm tracking-widest uppercase text-[#0F52BA]">
+              Systems Thinking
+            </h3>
+            <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+              Every project is treated as an architecture problem.
+              Control logic, hardware, power, software —
+              designed as one unified system.
+            </p>
           </div>
-        </Reveal>
 
-        {/* Paragraphs */}
-        <Reveal delay={120}>
-          <p className="text-lg leading-relaxed text-[var(--text-muted)]">
-            ARC Robotics is built around systems thinking.
-            We break problems down, design control logic,
-            test assumptions, and iterate until the system behaves
-            the way we intend it to.
-          </p>
-        </Reveal>
+          <div className="space-y-4">
+            <h3 className="text-sm tracking-widest uppercase text-[#0F52BA]">
+              Engineering Discipline
+            </h3>
+            <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+              Assumptions are tested. Designs are reviewed.
+              Systems are validated under constraints.
+              Reliability is non-negotiable.
+            </p>
+          </div>
 
-        <Reveal delay={200}>
-          <p className="text-lg leading-relaxed text-[var(--text-muted)]">
-            Our work spans hardware, software, and integration.
-            From mechanical design to embedded control and perception,
-            every project is treated as a complete system — not a collection
-            of isolated parts.
-          </p>
-        </Reveal>
+          <div className="space-y-4">
+            <h3 className="text-sm tracking-widest uppercase text-[#0F52BA]">
+              Real-World Execution
+            </h3>
+            <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+              We build physical systems.
+              We iterate through failure.
+              We deploy what we design.
+            </p>
+          </div>
 
-        <Reveal delay={280}>
-          <p className="text-lg leading-relaxed text-[var(--text-muted)]">
-            We care about reliability, clarity, and reproducibility.
-            Ideas are documented. Designs are reviewed.
-            Systems are tested under real constraints.
-          </p>
-        </Reveal>
-
+        </div>
       </div>
     </section>
   );
