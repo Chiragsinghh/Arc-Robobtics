@@ -8,21 +8,23 @@ type Social = {
   url: string;
 };
 
+type Props = {
+  name: string;
+  role: string;
+  description?: string;
+  image?: string | null;
+  socials?: Social[];
+  highlight?: boolean;
+};
+
 export default function TeamCard({
   name,
   role,
   description,
   image,
-  socials,
+  socials = [],
   highlight,
-}: {
-  name: string;
-  role: string;
-  description: string;
-  image: string;
-  socials?: Social[];
-  highlight?: boolean;
-}) {
+}: Props) {
   return (
     <div
       className={`
@@ -34,35 +36,23 @@ export default function TeamCard({
         rounded-xl
       `}
     >
-      {/* HUD CORNER ACCENTS (Visible on hover) */}
+      {/* HUD CORNER ACCENTS */}
       <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#0F52BA] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
       <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#0F52BA] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
 
       {/* IMAGE SECTION */}
       <div className="relative h-56 w-full overflow-hidden">
-        <Image
-          src={image}
-          alt={name}
-          fill
-          className="
-            object-cover 
-            grayscale group-hover:grayscale-0 
-            scale-105 group-hover:scale-100 
-            transition-all duration-700 ease-out
-            opacity-80 group-hover:opacity-100
-          "
-        />
-        {/* VIGNETTE OVERLAY */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1228] via-transparent to-transparent opacity-90" />
-        
-        {/* STATUS INDICATOR */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-           <div className={`w-1.5 h-1.5 rounded-full ${highlight ? 'bg-[#0F52BA] animate-pulse' : 'bg-slate-500'}`} />
-           <span className="text-[9px] font-mono uppercase tracking-widest text-white/50">Active_Node</span>
-        </div>
+      <Image
+  src={image}
+  alt={name}
+  fill
+  sizes="(max-width: 768px) 100vw, 33vw"
+  unoptimized   // ✅ THIS FIXES YOUR ERROR
+  className="object-cover"
+/>
       </div>
 
-      {/* CONTENT SECTION */}
+      {/* CONTENT */}
       <div className="p-5 space-y-3 relative">
         <div className="space-y-1">
           <div className="text-[10px] font-mono text-[#0F52BA] uppercase tracking-[0.2em]">
@@ -73,21 +63,22 @@ export default function TeamCard({
           </div>
         </div>
 
-        {/* DESCRIPTION - Appears smoothly on hover */}
-        <p
-          className="
-            text-xs leading-relaxed text-slate-400
-            opacity-0 -translate-y-2
-            transition-all duration-500
-            group-hover:opacity-100 group-hover:translate-y-0
-          "
-        >
-          {description}
-        </p>
+        {description && (
+          <p
+            className="
+              text-xs leading-relaxed text-slate-400
+              opacity-0 -translate-y-2
+              transition-all duration-500
+              group-hover:opacity-100 group-hover:translate-y-0
+            "
+          >
+            {description}
+          </p>
+        )}
       </div>
 
-      {/* SOCIAL LINKS */}
-      {socials && socials.length > 0 && (
+      {/* SOCIALS */}
+      {socials.length > 0 && (
         <div
           className="
             absolute bottom-6 left-5 right-5
@@ -98,7 +89,7 @@ export default function TeamCard({
             z-30
           "
         >
-          {socials.map((social) => {
+          {socials.map((social, i) => {
             const Icon =
               social.label === "LinkedIn"
                 ? LinkedInIcon
@@ -108,7 +99,7 @@ export default function TeamCard({
 
             return (
               <a
-                key={social.label}
+                key={social.label + i}
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -120,8 +111,7 @@ export default function TeamCard({
               </a>
             );
           })}
-          
-          {/* TECHNICAL DECORATION LINE */}
+
           <div className="flex-1 h-[1px] bg-white/10 self-center ml-2" />
         </div>
       )}

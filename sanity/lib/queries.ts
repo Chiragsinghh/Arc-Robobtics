@@ -23,6 +23,7 @@ export async function getEvents() {
       title,
       date,
       description,
+      detailedDescription, // ✅ ADD THIS
       image,
       "slug": slug.current
     }
@@ -62,6 +63,23 @@ export async function getKnowledgeTracks() {
         title,
         summary,
         "pdfUrl": pdf.asset->url
+      }
+    }
+  `);
+}
+
+export async function getTeamMembers() {
+  return sanityClient.fetch(`
+    *[_type == "teamMember"] | order(order asc) {
+      name,
+      role,
+      description,
+      year,
+      highlight,
+      "image": image.asset->url,
+      socials[]{
+        platform,
+        url
       }
     }
   `);

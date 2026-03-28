@@ -30,11 +30,21 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
 
+    // ✅ SHORT DESCRIPTION (for hover)
     defineField({
       name: "description",
       title: "Short Description",
       type: "text",
       rows: 3,
+    }),
+
+    // ✅ NEW FIELD (for popup)
+    defineField({
+      name: "detailedDescription",
+      title: "Detailed Description",
+      type: "text",
+      rows: 8,
+      description: "This will be shown in the popup modal",
     }),
 
     defineField({

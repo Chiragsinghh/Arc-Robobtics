@@ -5,69 +5,102 @@ export default async function Knowledge() {
   const tracks = await getKnowledgeTracks();
 
   return (
-    <section id="knowledge" className="px-8 py-32">
-      <div className="max-w-5xl mx-auto space-y-20">
+    <section className="px-8 pb-32">
+      <div className="max-w-6xl mx-auto space-y-24">
 
-        <FadeIn>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-            Knowledge Base
-          </h2>
-        </FadeIn>
+        {tracks.map((track: any) => (
+          <FadeIn key={track._id}>
+            
+            {/* TRACK CARD */}
+            <div
+              className="
+                border border-[var(--line)]
+                rounded-2xl
+                p-10
+                bg-[var(--bg-soft)]
+                space-y-10
+                transition
+                hover:border-[var(--accent-primary)]
+              "
+            >
+              
+              {/* HEADER */}
+              <div className="space-y-3">
+                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                  {track.title}
+                </h2>
 
-        <div className="space-y-16">
-          {tracks.map((track: any) => (
-            <FadeIn key={track._id}>
-              <div className="space-y-6">
+                <p className="text-sm text-[var(--text-muted)] max-w-2xl leading-relaxed">
+                  {track.intro}
+                </p>
+              </div>
 
-                {/* Track header */}
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-medium">
-                    {track.title}
-                  </h3>
-                  <p className="text-sm opacity-80 max-w-2xl">
-                    {track.intro}
-                  </p>
-                </div>
+              {/* MODULE GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Modules */}
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm">
-                  {track.modules.map((module: any) => (
-                    <li
-                      key={module._id}
-                      className="flex items-start gap-3"
-                    >
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-accent" />
+                {track.modules.map((module: any) => (
+                  <div
+                    key={module._id}
+                    className="
+                      group
+                      border border-[var(--line)]
+                      rounded-xl
+                      p-6
+                      bg-[var(--bg)]
+                      transition-all duration-300
+                      hover:border-[var(--accent-primary)]
+                      hover:shadow-lg
+                    "
+                  >
+                    
+                    {/* MODULE TITLE */}
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium">
+                        {module.title}
+                      </h3>
 
-                      <div className="space-y-1">
-                        <div className="font-medium">
-                          {module.title}
-                        </div>
+                      <div className="
+                        w-2 h-2 rounded-full
+                        bg-[var(--accent-primary)]
+                        opacity-60
+                        group-hover:opacity-100
+                        transition
+                      " />
+                    </div>
 
-                        {module.summary && (
-                          <p className="opacity-70 text-xs">
-                            {module.summary}
-                          </p>
-                        )}
+                    {/* SUMMARY */}
+                    {module.summary && (
+                      <p className="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">
+                        {module.summary}
+                      </p>
+                    )}
 
-                        {module.pdfUrl && (
-                          <a
-                            href={module.pdfUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-accent hover:underline inline-block mt-1"
-                          >
-                            View PDF
-                          </a>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                    {/* ACTION */}
+                    {module.pdfUrl && (
+                      <a
+                        href={module.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="
+                          mt-4 inline-block
+                          text-xs
+                          text-[var(--accent-primary)]
+                          hover:underline
+                        "
+                      >
+                        Open Resource →
+                      </a>
+                    )}
+
+                  </div>
+                ))}
 
               </div>
-            </FadeIn>
-          ))}
-        </div>
+
+            </div>
+
+          </FadeIn>
+        ))}
 
       </div>
     </section>

@@ -167,6 +167,7 @@ export default function Systems() {
 
   return (
     <section 
+    id="systems"
       ref={sectionRef} 
       className="relative bg-[#000926] text-white"
       style={{ height: `${systems.length * 85}vh` }}
