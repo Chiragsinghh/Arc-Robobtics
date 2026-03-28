@@ -121,9 +121,7 @@ function GridPoints({ baseColor, activeColor, shockRadius, shockStrength }: DotG
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]} // Fixed the TS error here
         />
       </bufferGeometry>
       <shaderMaterial
