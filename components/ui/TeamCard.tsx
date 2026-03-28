@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { LinkedInIcon, GitHubIcon, InstagramIcon } from "./SocialIcons";
 
+/* ===============================
+   TYPES
+================================= */
 type Social = {
   label: string;
   url: string;
@@ -23,7 +26,7 @@ export default function TeamCard({
   description,
   image,
   socials = [],
-  highlight,
+  highlight = false,
 }: Props) {
   return (
     <div
@@ -36,20 +39,26 @@ export default function TeamCard({
         rounded-xl
       `}
     >
-      {/* HUD CORNER ACCENTS */}
+      {/* HUD CORNERS */}
       <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#0F52BA] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
       <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#0F52BA] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
 
       {/* IMAGE SECTION */}
       <div className="relative h-56 w-full overflow-hidden">
-      <Image
-  src={image}
-  alt={name}
-  fill
-  sizes="(max-width: 768px) 100vw, 33vw"
-  unoptimized   // ✅ THIS FIXES YOUR ERROR
-  className="object-cover"
-/>
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            unoptimized
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-[#0B1228] text-slate-500 text-sm">
+            No Image
+          </div>
+        )}
       </div>
 
       {/* CONTENT */}
@@ -58,6 +67,7 @@ export default function TeamCard({
           <div className="text-[10px] font-mono text-[#0F52BA] uppercase tracking-[0.2em]">
             {role}
           </div>
+
           <div className="text-xl font-bold tracking-tight text-white group-hover:text-[#0F52BA] transition-colors duration-300">
             {name}
           </div>
