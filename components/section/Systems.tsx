@@ -156,6 +156,7 @@ export default function Systems() {
     async function fetchData() {
       try {
         const data = await getSystems();
+        console.log(`systems are: ${data}`)
         setSystems(data);
       } catch (err) {
         console.error("Sanity Error:", err);
