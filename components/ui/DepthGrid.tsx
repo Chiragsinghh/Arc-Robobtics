@@ -34,7 +34,7 @@ function GridPoints() {
         const x = i * 0.2;
         const y = j * 0.2;
         
-        array[idx + 2] = Math.sin(x + t) * 0.5 + Math.cos(y + t) * 0.5;
+        array[idx + 2] = Math.sin(x + t) * 0.7 + Math.cos(y + t) * 0.5;
       }
     }
 
