@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Space+Mono:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,60 +10,89 @@
   --text: #0f172a;
   --text-muted: #64748b;
   --accent-primary: #0f52ba;
+  --accent-secondary: #0ea5e9;
   --line: rgba(15, 82, 186, 0.1);
-  --grid-opacity: 0.08; /* Slightly more visible in light mode */
+  --grid-opacity: 0.1;
+  --space-glow: rgba(15, 82, 186, 0.15);
+  --font-mono: 'Space Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
 }
 
-/* Changed from [data-theme='dark'] to .dark */
 .dark {
-  --bg-page: #000926;
-  --bg-soft: #0b1228;
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent-primary: #0f52ba;
-  --line: rgba(255, 255, 255, 0.1);
-  --grid-opacity: 0.04;
+  --bg-page: #010409;
+  --bg-soft: #0d1117;
+  --text: #f0f6fc;
+  --text-muted: #8b949e;
+  --accent-primary: #2f81f7;
+  --accent-secondary: #58a6ff;
+  --line: rgba(56, 139, 253, 0.15);
+  --grid-opacity: 0.05;
+  --space-glow: rgba(56, 139, 253, 0.25);
 }
 
-/* ... keep the blueprint-grid utility from the previous step ... */
 .blueprint-grid {
   background-image: 
     linear-gradient(var(--accent-primary) 1px, transparent 1px),
     linear-gradient(90deg, var(--accent-primary) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-size: 50px 50px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
   opacity: var(--grid-opacity);
+}
+
+.space-grid {
+  background-image: 
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 100px 100px;
+  mask-image: linear-gradient(to bottom, transparent, black, transparent);
 }
 
 @layer base {
   body {
-    @apply bg-[var(--bg-page)] text-[var(--text)] transition-colors duration-500 ease-in-out;
+    @apply bg-[var(--bg-page)] text-[var(--text)] transition-colors duration-500 ease-in-out antialiased;
+    font-family: var(--font-sans);
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer components {
-  /* Smooth scrollbar for the horizontal tracks */
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* Reusable Engineering Title Style */
   .hero-title {
     @apply font-bold tracking-tighter uppercase italic;
+    font-family: var(--font-mono);
     font-display: swap;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Glassmorphism utility */
-  .glass-effect {
-    @apply bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)];
+  .hero-title:hover {
+    color: var(--accent-primary);
+    text-shadow: 0 0 20px var(--space-glow);
+    transform: scale(1.02);
   }
+
+  .glass-effect {
+    @apply bg-black/10 dark:bg-white/5 backdrop-blur-md border border-[var(--line)];
+  }
+
+  .hud-border {
+    position: relative;
+    border: 1px solid var(--line);
+  }
+
+  .hud-border::before,
+  .hud-border::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--accent-primary);
+  }
+
+  .hud-border-tl::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+  .hud-border-tr::after { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
+  .hud-border-bl::before { bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
+  .hud-border-br::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
 }
 
-/* --- Selection Color --- */
 ::selection {
   background-color: var(--accent-primary);
   color: white;
@@ -70,4 +101,3 @@
 html {
   scroll-behavior: smooth;
 }
-

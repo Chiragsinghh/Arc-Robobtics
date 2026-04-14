@@ -1,19 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getSystems } from "../../sanity/lib/queries";
 import { urlFor } from "../../sanity/lib/image";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-/**
- * Avoid SSR warning for useLayoutEffect
- */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+gsap.registerPlugin(ScrollTrigger);
 
-/* ===============================
-   TYPES
-================================= */
 type System = {
   _id: string;
   title: string;
@@ -22,141 +16,19 @@ type System = {
   tags?: string[];
 };
 
-/* ===============================
-   CARD COMPONENT
-================================= */
-type CardProps = {
-  system: System;
-  index: number;
-  scrollY: MotionValue<number>;
-  sectionTop: number;
-  sectionHeight: number;
-  totalCards: number;
-};
-
-function SystemCard({
-  system,
-  index,
-  scrollY,
-  sectionTop,
-  sectionHeight,
-  totalCards,
-}: CardProps) {
-  // ✅ FIXED: explicitly typed value
-  const scale = useTransform(scrollY, (value: number) => {
-    if (!sectionTop || !sectionHeight) return 0.9;
-
-    const progress = (value - sectionTop) / sectionHeight;
-    const cardProgress = progress * totalCards;
-    const distance = Math.abs(cardProgress - index);
-
-    return Math.max(0.85, 1 - distance * 0.15);
-  });
-
-  const rotate = useTransform(scrollY, (value: number) => {
-    if (!sectionTop || !sectionHeight) return 0;
-
-    const progress = (value - sectionTop) / sectionHeight;
-    const cardProgress = progress * totalCards;
-
-    return (cardProgress - index) * 2;
-  });
-
-  return (
-    <motion.div
-      style={{ scale, rotateZ: rotate, perspective: 1200 }}
-      className="w-[70vw] max-w-[800px] group shrink-0"
-    >
-      <div className="relative w-full h-[480px] transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
-        
-        {/* FRONT */}
-        <div className="absolute inset-0 rounded-3xl overflow-hidden border border-white/5 shadow-2xl [backface-visibility:hidden]">
-          {system.image && (
-            <img
-              src={urlFor(system.image).width(1200).url()}
-              alt={system.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          )}
-
-          <div className="absolute inset-0 bg-gradient-to-t from-[#000926] via-[#000926]/20 to-transparent" />
-
-          <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
-            <div>
-              <p className="text-[#0F52BA] font-mono text-[10px] mb-2 tracking-[0.3em] uppercase opacity-70">
-                Model Type S-0{index + 1}
-              </p>
-              <h3 className="text-3xl font-bold tracking-tighter italic uppercase text-white">
-                {system.title}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        {/* BACK */}
-        <div className="absolute inset-0 rounded-3xl bg-[#0B1228] border border-[#0F52BA]/30 shadow-[0_0_50px_rgba(15,82,186,0.1)] p-10 flex flex-col [transform:rotateY(180deg)] [backface-visibility:hidden]">
-          <div className="flex-1">
-            <h3 className="text-2xl font-bold text-[#0F52BA] uppercase mb-4">
-              {system.title}
-            </h3>
-
-            <p className="text-slate-400 text-sm leading-relaxed">
-              {system.description}
-            </p>
-          </div>
-
-          {system.tags && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {system.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[10px] font-mono px-3 py-1 border border-white/10 text-slate-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ===============================
-   MAIN SECTION
-================================= */
 export default function Systems() {
   const [systems, setSystems] = useState<System[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const sectionRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
-
-  const [maxTranslate, setMaxTranslate] = useState(0);
-  const [sectionTop, setSectionTop] = useState(0);
-  const [sectionHeight, setSectionHeight] = useState(0);
-
-  const { scrollY } = useScroll();
-
-  const x = useTransform(
-    scrollY,
-    [sectionTop, sectionTop + sectionHeight],
-    [0, -maxTranslate]
-  );
-
-  const progressBarScaleX = useTransform(
-    scrollY,
-    [sectionTop, sectionTop + sectionHeight],
-    [0, 1]
-  );
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
 
   /* FETCH DATA */
   useEffect(() => {
     async function fetchData() {
       try {
         const data = await getSystems();
-        console.log(`systems are: ${data}`)
         setSystems(data);
       } catch (err) {
         console.error("Sanity Error:", err);
@@ -167,80 +39,157 @@ export default function Systems() {
     fetchData();
   }, []);
 
-  /* LAYOUT CALC */
-  useIsomorphicLayoutEffect(() => {
-    if (!trackRef.current || !sectionRef.current || loading) return;
+  /* GSAP HORIZONTAL SCROLL */
+  useEffect(() => {
+    if (loading || systems.length === 0) return;
 
-    const calculateLayout = () => {
-      const totalWidth = trackRef.current!.scrollWidth;
-      const viewportWidth = window.innerWidth;
+    const ctx = gsap.context(() => {
+      const pinWidth = pinRef.current!.offsetWidth;
+      const scrollWidth = pinWidth - window.innerWidth;
 
-      setMaxTranslate(totalWidth - viewportWidth + 160);
+      // 1. Horizontal Scroll Timeline
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: triggerRef.current,
+          pin: true,
+          start: "top top",
+          end: `+=${pinWidth}`,
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      });
 
-      const rect = sectionRef.current!.getBoundingClientRect();
+      tl.to(pinRef.current, {
+        x: -scrollWidth,
+        ease: "none",
+      });
 
-      setSectionTop(window.scrollY + rect.top);
-      setSectionHeight(sectionRef.current!.offsetHeight);
-    };
+      // 2. Card Reveal Animations (within the horizontal timeline)
+      gsap.from(".sys-card", {
+        scale: 0.8,
+        rotateY: 15,
+        opacity: 0,
+        stagger: 0.1,
+        scrollTrigger: {
+          trigger: triggerRef.current,
+          start: "top top",
+          end: `+=${pinWidth}`,
+          scrub: 1.5,
+        }
+      });
 
-    calculateLayout();
-    window.addEventListener("resize", calculateLayout);
+      // 3. Header Parallax
+      gsap.to(".sys-header", {
+        x: -200,
+        opacity: 0.5,
+        scrollTrigger: {
+          trigger: triggerRef.current,
+          start: "top top",
+          end: "500px top",
+          scrub: true,
+        }
+      });
 
-    return () => window.removeEventListener("resize", calculateLayout);
-  }, [systems, loading]);
+    }, triggerRef);
+
+    return () => ctx.revert();
+  }, [loading, systems]);
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#000926]">
-        <div className="w-12 h-12 border-2 border-[#0F52BA] border-t-transparent rounded-full animate-spin" />
+      <div className="h-screen flex items-center justify-center bg-[#010409]">
+        <div className="w-12 h-12 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <section
-      id="systems"
-      ref={sectionRef}
-      className="relative bg-[#000926] text-white"
-      style={{ height: `${systems.length * 85}vh` }}
-    >
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+    <section ref={triggerRef} id="systems" className="relative overflow-hidden bg-[#010409]">
+      <div ref={pinRef} className="relative h-screen flex items-center w-fit px-20 lg:px-40">
         
         {/* HEADER */}
-        <div className="px-10 md:px-20 mb-12">
-          <h2 className="text-5xl md:text-7xl font-bold italic uppercase">
-            Systems <span className="text-[#0F52BA]">Design.</span>
-          </h2>
+        <div className="sys-header shrink-0 mr-40">
+           <div className="flex items-center gap-4 text-[10px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.5em] mb-4">
+              <div className="w-10 h-px bg-[var(--accent-primary)]" />
+              <span>Project_Database</span>
+           </div>
+           <h2 className="text-6xl lg:text-8xl font-mono font-bold italic uppercase tracking-tighter text-white">
+              CORE <span className="text-[var(--accent-primary)]">SYSTEMS.</span>
+           </h2>
+           <p className="mt-8 text-white/30 font-mono text-sm max-w-sm border-l border-white/10 pl-6 leading-relaxed">
+             {">"} Scanning infrastructure...
+             <br />
+             {">"} {systems.length} mission-active units identified. 
+             <br />
+             {">"} End-to-end autonomous integration at scale.
+           </p>
         </div>
 
-        {/* TRACK */}
-        <div className="flex-1 flex items-center">
-          <motion.div
-            ref={trackRef}
-            style={{ x }}
-            className="flex gap-16 px-10 md:px-20"
-          >
-            {systems.map((system, index) => (
-              <SystemCard
-                key={system._id}
-                system={system}
-                index={index}
-                scrollY={scrollY}
-                sectionTop={sectionTop}
-                sectionHeight={sectionHeight}
-                totalCards={systems.length}
-              />
-            ))}
-          </motion.div>
+        {/* CARDS */}
+        <div className="flex gap-20">
+          {systems.map((system, index) => (
+            <div
+              key={system._id}
+              className="sys-card relative w-[75vw] max-w-[550px] aspect-[4/5] lg:aspect-[3/4] group shrink-0"
+            >
+              {/* Card Container */}
+              <div className="relative w-full h-full glass-effect border border-white/5 overflow-hidden transition-all duration-700 group-hover:border-[var(--accent-primary)]/50">
+                
+                {/* Image Overlay */}
+                {system.image && (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <img
+                      src={urlFor(system.image).width(1000).url()}
+                      alt={system.title}
+                      className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#010409] via-transparent to-transparent" />
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="absolute inset-0 p-10 flex flex-col justify-end">
+                   <span className="text-[9px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.4em] mb-3">
+                      Sect_Unit_0{index + 1}
+                   </span>
+                   <h3 className="text-3xl lg:text-4xl font-mono font-bold text-white uppercase italic tracking-tighter mb-4 group-hover:text-[var(--accent-primary)] transition-colors">
+                      {system.title}
+                   </h3>
+                   <p className="text-xs lg:text-sm text-white/40 font-mono leading-relaxed line-clamp-3 mb-8 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                      {system.description}
+                   </p>
+
+                   {/* Tags */}
+                   <div className="flex flex-wrap gap-3">
+                      {system.tags?.map(tag => (
+                        <span key={tag} className="text-[8px] font-mono px-3 py-1 border border-white/10 rounded-full text-white/60 tracking-widest uppercase">
+                          {tag}
+                        </span>
+                      ))}
+                   </div>
+                </div>
+
+                {/* Scanning Light Effect */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                   <div className="w-full h-1 bg-[var(--accent-primary)]/20 absolute -translate-y-full group-hover:translate-y-[1000px] transition-all duration-[3000ms] ease-linear" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* PROGRESS BAR */}
-        <div className="absolute bottom-12 left-10 right-10 h-[1px] bg-white/10">
-          <motion.div
-            className="h-full bg-[#0F52BA]"
-            style={{ scaleX: progressBarScaleX, transformOrigin: "0%" }}
-          />
+        {/* Closing Element */}
+        <div className="shrink-0 ml-40 pr-20">
+           <div className="text-white/10 font-mono text-[10rem] font-bold tracking-tighter leading-none italic rotate-90 select-none">
+              ARC_TECH
+           </div>
         </div>
+      </div>
+
+      {/* Persistent Progress Indicator */}
+      <div className="absolute bottom-12 left-12 flex items-center gap-4">
+         <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)] animate-ping" />
+         <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.5em]">System_Read_Stream: Active</span>
       </div>
     </section>
   );
