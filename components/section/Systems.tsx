@@ -64,17 +64,18 @@ export default function Systems() {
         ease: "none",
       });
 
-      // 2. Card Reveal Animations (within the horizontal timeline)
+      // 2. Card Reveal Animations: More immediate visibility
       gsap.from(".sys-card", {
-        scale: 0.8,
-        rotateY: 15,
-        opacity: 0,
-        stagger: 0.1,
+        x: 100,
+        opacity: 0.2, // Start with some visibility
+        scale: 0.95,
+        stagger: 0.2,
+        duration: 1.2,
+        ease: "expo.out",
         scrollTrigger: {
           trigger: triggerRef.current,
-          start: "top top",
-          end: `+=${pinWidth}`,
-          scrub: 1.5,
+          start: "top 80%", // Trigger earlier
+          toggleActions: "play none none none",
         }
       });
 

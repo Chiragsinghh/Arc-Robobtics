@@ -60,9 +60,32 @@ export default function Events() {
 
     // Content Reveal Animation
     gsap.fromTo(displayRef.current, 
-      { opacity: 0, x: 50, filter: "blur(10px)" },
-      { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.8, ease: "power2.out" }
+      { opacity: 0, x: 100, filter: "blur(10px)" },
+      { 
+        opacity: 1, 
+        x: 0, 
+        filter: "blur(0px)", 
+        duration: 1.2, 
+        ease: "expo.out",
+        scrollTrigger: {
+          trigger: displayRef.current,
+          start: "top 80%",
+        }
+      }
     );
+
+    // Section Header Reveal
+    gsap.from(".events-reveal", {
+      y: 50,
+      opacity: 0,
+      stagger: 0.2,
+      duration: 1,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: "#Events",
+        start: "top 70%",
+      }
+    });
   }, [currentIndex, loading, events.length]);
 
   // Modal Animation Logic

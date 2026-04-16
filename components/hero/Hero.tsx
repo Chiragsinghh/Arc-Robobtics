@@ -37,15 +37,14 @@ export default function Hero() {
         }
       });
 
-      // 3. Details Group Parallax (Inverse move)
+      // 3. Details Group: Fade away permanently when scroll begins
       gsap.to(detailsRef.current, {
         y: -100,
         opacity: 0,
         scrollTrigger: {
           trigger: heroRef.current,
-          start: "top top",
-          end: "40% top",
-          scrub: true,
+          start: "10% top",
+          toggleActions: "play none none none",
         }
       });
 
@@ -86,11 +85,11 @@ export default function Hero() {
 
           {/* Main Title with GSAP scrubbing parallax */}
           <div ref={titleRef} className="hero-reveal relative group cursor-default will-change-transform">
-            <h1 className="hero-title text-[clamp(3.5rem,10vw,9rem)] leading-[0.85] text-white italic tracking-tighter mix-blend-difference">
-              <DecryptText text="ARC" delay={500} duration={2500} />
+            <h1 className="hero-title text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.85] text-white italic tracking-tighter mix-blend-difference">
+              <DecryptText text="ARC" delay={300} duration={1200} />
               <br />
               <span className="text-[var(--accent-primary)] transition-all duration-700 group-hover:drop-shadow-[0_0_15px_var(--accent-primary)]">
-                <DecryptText text="ROBOTICS" delay={1200} duration={3500} />
+                <DecryptText text="ROBOTICS" delay={600} duration={1800} />
               </span>
             </h1>
           </div>

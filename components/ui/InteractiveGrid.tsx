@@ -1,38 +1,55 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
 export default function InteractiveGrid({ intensity = "normal" }: { intensity?: "normal" | "violent" }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight,
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || dimensions.width === 0) return;
 
-    const rows = 12;
-    const cols = 18;
+    const spacing = 100; // Increased spacing to reduce count
+    const cols = Math.ceil(dimensions.width / spacing) + 1;
+    const rows = Math.ceil(dimensions.height / spacing) + 1;
     const isViolent = intensity === "violent";
     
     container.innerHTML = "";
 
     // 1. Primary Grid Lines
     const gridDiv = document.createElement("div");
-    gridDiv.className = `absolute inset-0 transition-opacity duration-1000 ${isViolent ? 'opacity-[0.3]' : 'opacity-[0.15]'}`;
+    gridDiv.className = `absolute inset-0 transition-opacity duration-1000 ${isViolent ? 'opacity-[0.2]' : 'opacity-[0.05]'}`;
     gridDiv.style.backgroundImage = `
       linear-gradient(rgba(15, 82, 186, ${isViolent ? '0.6' : '0.4'}) 1px, transparent 1px),
       linear-gradient(90deg, rgba(15, 82, 186, ${isViolent ? '0.6' : '0.4'}) 1px, transparent 1px)
     `;
-    gridDiv.style.backgroundSize = "50px 50px";
+    gridDiv.style.backgroundSize = `${spacing}px ${spacing}px`;
     container.appendChild(gridDiv);
 
-    // 2. Secondary Scanline Glow (Faster if violent)
+    // 2. Secondary Scanline Glow
     const scanline = document.createElement("div");
-    scanline.className = `absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent-primary)]/${isViolent ? '40' : '20'} to-transparent z-20 pointer-events-none`;
+    scanline.className = `absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--accent-primary)]/${isViolent ? '30' : '15'} to-transparent z-20 pointer-events-none`;
     container.appendChild(scanline);
     gsap.to(scanline, {
       top: "100%",
-      duration: isViolent ? 6 : 10,
+      duration: isViolent ? 8 : 15,
       ease: "none",
       repeat: -1
     });
@@ -42,76 +59,63 @@ export default function InteractiveGrid({ intensity = "normal" }: { intensity?: 
     dotsWrapper.className = "absolute inset-0 z-10 pointer-events-none";
     container.appendChild(dotsWrapper);
 
-    const dots: HTMLDivElement[] = [];
+    const dots: { el: HTMLDivElement, x: number, y: number }[] = [];
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
         const dot = document.createElement("div");
-        dot.className = "absolute w-[4px] h-[4px] bg-white/30 rounded-full";
-        dot.style.left = `${(j * 100) / (cols - 1)}%`;
-        dot.style.top = `${(i * 100) / (rows - 1)}%`;
+        const x = j * spacing;
+        const y = i * spacing;
+        dot.className = "absolute w-[2px] h-[2px] bg-white rounded-full opacity-0 transition-opacity duration-500 will-change-transform";
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+        dot.style.transform = "translate(-50%, -50%) scale(0.5)";
         dotsWrapper.appendChild(dot);
-        dots.push(dot);
-
-        // Subtle Ambient Pulse
-        gsap.to(dot, {
-          opacity: 0.1,
-          duration: 2 + Math.random() * 2,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut"
-        });
+        dots.push({ el: dot, x, y });
       }
     }
 
+    let rafId: number;
     const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const rect = container.getBoundingClientRect();
-      const relX = clientX - rect.left;
-      const relY = clientY - rect.top;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const rect = container.getBoundingClientRect();
+        const relX = e.clientX - rect.left;
+        const relY = e.clientY - rect.top;
 
-      dots.forEach((dot) => {
-        const dx = parseFloat(dot.style.left) * rect.width / 100 - relX;
-        const dy = parseFloat(dot.style.top) * rect.height / 100 - relY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const radius = isViolent ? 300 : 200;
+        dots.forEach((dot) => {
+          const dx = dot.x - relX;
+          const dy = dot.y - relY;
+          const dist = dx * dx + dy * dy; // Use squared distance
+          const radius = isViolent ? 250 : 150;
+          const radiusSq = radius * radius;
 
-        if (dist < radius) {
-          const ratio = 1 - dist / radius;
-          gsap.to(dot, {
-            scale: 1 + ratio * (isViolent ? 5 : 3),
-            backgroundColor: "var(--accent-primary)",
-            boxShadow: `0 0 ${ratio * (isViolent ? 25 : 15)}px var(--accent-primary)`,
-            opacity: isViolent ? 1 : 0.8,
-            overwrite: "auto",
-            duration: 0.2,
-          });
-
-          if (isViolent && ratio > 0.8) {
-            // Flickering Alarm Pulse
-             gsap.to(dot, {
-                opacity: 0.2,
-                duration: 0.05,
-                repeat: 3,
-                yoyo: true,
-                ease: "none"
-             });
+          if (dist < radiusSq) {
+            const d = Math.sqrt(dist);
+            const ratio = 1 - d / radius;
+            const scale = 1 + ratio * (isViolent ? 2.5 : 1.5);
+            const opacity = ratio * (isViolent ? 0.8 : 0.4);
+            
+            dot.el.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            dot.el.style.opacity = opacity.toString();
+            dot.el.style.backgroundColor = "var(--accent-primary)";
+            dot.el.style.boxShadow = `0 0 ${ratio * 8}px var(--accent-primary)`;
+          } else {
+            dot.el.style.transform = "translate(-50%, -50%) scale(0.5)";
+            dot.el.style.opacity = "0";
+            dot.el.style.backgroundColor = "#fff";
+            dot.el.style.boxShadow = "none";
           }
-        } else {
-          gsap.to(dot, {
-            scale: 1,
-            backgroundColor: "rgba(255,255,255,0.3)",
-            boxShadow: "none",
-            opacity: 0.2,
-            overwrite: "auto",
-            duration: 0.6,
-          });
-        }
+        });
       });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [intensity]);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(rafId);
+      container.innerHTML = "";
+    };
+  }, [dimensions, intensity]);
 
   return (
     <div
@@ -120,3 +124,4 @@ export default function InteractiveGrid({ intensity = "normal" }: { intensity?: 
     />
   );
 }
+

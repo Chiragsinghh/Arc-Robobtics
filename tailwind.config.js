@@ -55,7 +55,16 @@ module.exports = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+      animation: {
+        scan: "scan 4s linear infinite",
+      },
+      keyframes: {
+        scan: {
+          "0%": { top: "-10%" },
+          "100%": { top: "110%" },
+        },
+      },
   	}
   },
   plugins: [require("tailwindcss-animate")],

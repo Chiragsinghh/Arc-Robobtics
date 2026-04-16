@@ -40,14 +40,18 @@ export default function Team() {
   return (
     <section
       id="team"
-      className="relative px-6 lg:px-16 py-40 bg-[#000508] text-white overflow-hidden"
+      className="relative px-6 lg:px-16 py-40 bg-[#000508] text-white"
     >
       <div className="absolute inset-0 pointer-events-none">
          <InteractiveGrid intensity="violent" />
       </div>
 
-      <div className="max-w-7xl mx-auto relative z-10 space-y-32">
+      {/* Global Backdrop on Hover */}
+      <div 
+        className={`fixed inset-0 bg-black/60 transition-opacity duration-700 pointer-events-none z-40 ${hoveredId ? "opacity-100" : "opacity-0"}`} 
+      />
 
+      <div className="max-w-7xl mx-auto relative space-y-32">
         {/* HEADER */}
         <div className="space-y-6">
            <div className="flex items-center gap-4 text-[10px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.5em]">
@@ -68,14 +72,14 @@ export default function Team() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {thirdYearTeam.map((member, idx) => {
               const id = `3rd-${idx}`;
-              const isDimmed = hoveredId !== null && hoveredId !== id;
+              const isHovered = hoveredId === id;
+              
               return (
                 <div 
                   key={id} 
                   onMouseEnter={() => setHoveredId(id)} 
                   onMouseLeave={() => setHoveredId(null)}
-                  className="transition-opacity duration-500"
-                  style={{ opacity: isDimmed ? 0.15 : 1 }}
+                  className={`transition-all duration-500 ${isHovered ? 'relative z-50 scale-105' : 'relative z-10'}`}
                 >
                   <TeamCard
                     name={member.name}
@@ -84,10 +88,15 @@ export default function Team() {
                     image={member.image || null}
                     highlight={member.highlight ?? false}
                     socials={
-                      member.socials?.map((s) => ({
-                        label: s.platform.charAt(0).toUpperCase() + s.platform.slice(1),
-                        url: s.url,
-                      })) || []
+                      member.socials?.map((s) => {
+                        let label: "LinkedIn" | "GitHub" | "Instagram" = "LinkedIn";
+                        const p = s.platform.toLowerCase();
+                        if (p === "github") label = "GitHub";
+                        else if (p === "instagram") label = "Instagram";
+                        else label = "LinkedIn";
+                        
+                        return { label, url: s.url };
+                      }) || []
                     }
                   />
                 </div>
@@ -105,14 +114,14 @@ export default function Team() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {secondYearTeam.map((member, idx) => {
               const id = `2nd-${idx}`;
-              const isDimmed = hoveredId !== null && hoveredId !== id;
+              const isHovered = hoveredId === id;
+
               return (
                 <div 
                   key={id} 
                   onMouseEnter={() => setHoveredId(id)} 
                   onMouseLeave={() => setHoveredId(null)}
-                  className="transition-opacity duration-500"
-                  style={{ opacity: isDimmed ? 0.15 : 1 }}
+                  className={`transition-all duration-500 ${isHovered ? 'relative z-50 scale-105' : 'relative z-10'}`}
                 >
                   <TeamCard
                     name={member.name}
@@ -121,10 +130,15 @@ export default function Team() {
                     image={member.image || null}
                     highlight={member.highlight ?? false}
                     socials={
-                      member.socials?.map((s) => ({
-                        label: s.platform.charAt(0).toUpperCase() + s.platform.slice(1),
-                        url: s.url,
-                      })) || []
+                      member.socials?.map((s) => {
+                        let label: "LinkedIn" | "GitHub" | "Instagram" = "LinkedIn";
+                        const p = s.platform.toLowerCase();
+                        if (p === "github") label = "GitHub";
+                        else if (p === "instagram") label = "Instagram";
+                        else label = "LinkedIn";
+                        
+                        return { label, url: s.url };
+                      }) || []
                     }
                   />
                 </div>

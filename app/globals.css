@@ -5,15 +5,15 @@
 @tailwind utilities;
 
 :root {
-  --bg-page: #f8fafc;
-  --bg-soft: #ffffff;
-  --text: #0f172a;
-  --text-muted: #64748b;
+  --bg-page: #000508;
+  --bg-soft: #011409;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
   --accent-primary: #0f52ba;
   --accent-secondary: #0ea5e9;
-  --line: rgba(15, 82, 186, 0.1);
-  --grid-opacity: 0.1;
-  --space-glow: rgba(15, 82, 186, 0.15);
+  --line: rgba(15, 82, 186, 0.2);
+  --grid-opacity: 0.15;
+  --space-glow: rgba(15, 82, 186, 0.25);
   --font-mono: 'Space Mono', monospace;
   --font-sans: 'Inter', sans-serif;
 }
