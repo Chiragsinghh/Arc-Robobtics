@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { LinkedInIcon, GitHubIcon, InstagramIcon } from "./SocialIcons";
+import { urlFor } from "../../sanity/lib/image";
+import { useState, useRef, useEffect } from "react";
+import gsap from "gsap";
 
-/* ===============================
-   TYPES
-================================= */
 type Social = {
   label: string;
   url: string;
@@ -15,7 +15,7 @@ type Props = {
   name: string;
   role: string;
   description?: string;
-  image?: string | null;
+  image?: any;
   socials?: Social[];
   highlight?: boolean;
 };
@@ -28,103 +28,136 @@ export default function TeamCard({
   socials = [],
   highlight = false,
 }: Props) {
+  const [isHovered, setIsHovered] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      if (isHovered) {
+        gsap.to(containerRef.current, {
+          y: -10,
+          scale: 1.02,
+          duration: 0.4,
+          ease: "back.out(1.7)",
+          overwrite: "auto"
+        });
+        gsap.to(infoRef.current, {
+           width: 240,
+           opacity: 1,
+           x: 0,
+           duration: 0.5,
+           ease: "expo.out",
+           overwrite: "auto"
+        });
+      } else {
+        gsap.to(containerRef.current, {
+          y: 0,
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.inOut",
+          overwrite: "auto"
+        });
+        gsap.to(infoRef.current, {
+           width: 0,
+           opacity: 0,
+           x: -20,
+           duration: 0.3,
+           ease: "power2.in",
+           overwrite: "auto"
+        });
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [isHovered]);
+
   return (
     <div
-      className={`
-        group relative overflow-hidden
-        bg-[#0B1228]/50 backdrop-blur-sm
-        border transition-all duration-500 ease-in-out
-        ${highlight ? "border-[#0F52BA]" : "border-white/10"}
-        h-[360px] hover:h-[440px]
-        rounded-xl
-      `}
+      ref={containerRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative z-10 hover:z-50 cursor-crosshair"
+      style={{ width: "260px" }}
     >
-      {/* HUD CORNERS */}
-      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#0F52BA] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
-      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#0F52BA] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20" />
-
-      {/* IMAGE SECTION */}
-      <div className="relative h-56 w-full overflow-hidden">
-        {image ? (
-          <Image
-            src={image}
-            alt={name}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            unoptimized
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[#0B1228] text-slate-500 text-sm">
-            No Image
-          </div>
-        )}
-      </div>
-
-      {/* CONTENT */}
-      <div className="p-5 space-y-3 relative">
-        <div className="space-y-1">
-          <div className="text-[10px] font-mono text-[#0F52BA] uppercase tracking-[0.2em]">
-            {role}
-          </div>
-
-          <div className="text-xl font-bold tracking-tight text-white group-hover:text-[#0F52BA] transition-colors duration-300">
-            {name}
+      <div className={`
+        relative flex items-stretch h-[380px] lg:h-[420px]
+        bg-[#02081a] border transition-colors duration-500
+        ${highlight ? "border-[var(--accent-primary)] shadow-[0_0_30px_rgba(15,82,186,0.15)]" : "border-white/10"}
+      `}>
+        {/* 1. PRIMARY PORTRAIT */}
+        <div className="relative w-full h-full overflow-hidden">
+          {image ? (
+            <div className={`w-full h-full transition-all duration-1000 ${isHovered ? 'grayscale-0' : 'grayscale'}`}>
+              <Image
+                src={urlFor(image).width(800).url()}
+                alt={name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-black/40 text-[8px] font-mono text-white/5 uppercase">
+              No_Visual
+            </div>
+          )}
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-[#010614] via-transparent to-transparent opacity-90" />
+          
+          <div className="absolute bottom-0 left-0 w-full p-8 space-y-1">
+            <span className="text-[8px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.3em] block">
+              {role}
+            </span>
+            <h3 className="text-xl lg:text-2xl font-mono font-bold text-white uppercase italic tracking-tighter leading-none">
+              {name}
+            </h3>
           </div>
         </div>
 
-        {description && (
-          <p
-            className="
-              text-xs leading-relaxed text-slate-400
-              opacity-0 -translate-y-2
-              transition-all duration-500
-              group-hover:opacity-100 group-hover:translate-y-0
-            "
-          >
-            {description}
-          </p>
-        )}
-      </div>
-
-      {/* SOCIALS */}
-      {socials.length > 0 && (
-        <div
-          className="
-            absolute bottom-6 left-5 right-5
-            flex gap-5
-            opacity-0 translate-y-4
-            transition-all duration-500 delay-100
-            group-hover:opacity-100 group-hover:translate-y-0
-            z-30
-          "
+        {/* 2. ABSOLUTE OVERLAY DOSSIER */}
+        <div 
+          ref={infoRef}
+          className="absolute left-[100%] top-0 h-full overflow-hidden opacity-0 pointer-events-none z-20"
+          style={{ width: "0px" }}
         >
-          {socials.map((social, i) => {
-            const Icon =
-              social.label === "LinkedIn"
-                ? LinkedInIcon
-                : social.label === "GitHub"
-                ? GitHubIcon
-                : InstagramIcon;
+           <div className="w-[240px] h-full bg-[#020b1f] border-y border-r border-white/10 p-10 flex flex-col justify-between shadow-[20px_0_50px_rgba(0,0,0,0.8)]">
+              <div className="space-y-8">
+                 <div className="flex items-center gap-4 text-[8px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.4em]">
+                    <div className="w-10 h-px bg-[var(--accent-primary)]/40" />
+                    <span>Dossier_Link</span>
+                 </div>
+                 
+                 <p className="text-[11px] font-mono leading-relaxed text-white/50">
+                    {description || "Authorized tactical summary for operative."}
+                 </p>
+              </div>
 
-            return (
-              <a
-                key={social.label + i}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-slate-500 hover:text-[#0F52BA] transition-colors duration-300"
-              >
-                <div className="scale-90 hover:scale-110 transition-transform">
-                  <Icon />
-                </div>
-              </a>
-            );
-          })}
-
-          <div className="flex-1 h-[1px] bg-white/10 self-center ml-2" />
+              <div className="space-y-6">
+                 <div className="h-px w-full bg-white/10" />
+                 <div className="flex items-center gap-6 pointer-events-auto">
+                    {socials.map((social, i) => {
+                      const Icon = social.label === "LinkedIn" ? LinkedInIcon : social.label === "GitHub" ? GitHubIcon : InstagramIcon;
+                      return (
+                        <a
+                          key={i}
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white/40 hover:text-[var(--accent-primary)] transition-all transform hover:scale-125 hover:drop-shadow-[0_0_8px_var(--accent-primary)]"
+                        >
+                          <Icon size={18} />
+                        </a>
+                      );
+                    })}
+                 </div>
+              </div>
+           </div>
+           
+           {/* High-Glow Accents */}
+           <div className="absolute inset-x-0 bottom-0 h-1 bg-[var(--accent-primary)]/40 shadow-[0_0_15px_var(--accent-primary)] z-10" />
         </div>
-      )}
+      </div>
     </div>
   );
 }

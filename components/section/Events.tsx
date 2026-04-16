@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { getEvents } from "../../sanity/lib/queries";
 import { urlFor } from "../../sanity/lib/image";
-import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import InteractiveGrid from "../ui/InteractiveGrid";
 
 interface SanityEvent {
   _id: string;
@@ -15,293 +16,238 @@ interface SanityEvent {
 }
 
 export default function Events() {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const [events, setEvents] = useState<SanityEvent[]>([]);
-  const [activeHoverIndex, setActiveHoverIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState<SanityEvent | null>(null);
 
-  const scroll = (direction: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    el.scrollBy({
-      left: direction === "left" ? -400 : 400,
-      behavior: "smooth",
-    });
-  };
+  const orbitalRef = useRef<HTMLDivElement>(null);
+  const displayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchData() {
-      const data = await getEvents();
-      setEvents(data);
+      try {
+        const data = await getEvents();
+        setEvents(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchData();
   }, []);
 
-  // Infinite Scroll
+  const handleNavigate = (direction: "prev" | "next") => {
+    const newIndex = direction === "next" 
+      ? (currentIndex + 1) % events.length 
+      : (currentIndex - 1 + events.length) % events.length;
+    
+    setCurrentIndex(newIndex);
+  };
+
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || !events.length) return;
+    if (loading || events.length === 0) return;
 
-    const handleScroll = () => {
-      const totalWidth = el.scrollWidth / 2;
-      if (el.scrollLeft <= 0) el.scrollLeft = totalWidth;
-      if (el.scrollLeft >= totalWidth) el.scrollLeft = 1;
-    };
+    const angleIncrement = 360 / events.length;
+    const targetRotation = -angleIncrement * currentIndex;
 
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [events]);
+    gsap.to(orbitalRef.current, {
+      rotation: targetRotation,
+      duration: 1.2,
+      ease: "power3.inOut",
+    });
 
-  // Wheel scroll
+    // Content Reveal Animation
+    gsap.fromTo(displayRef.current, 
+      { opacity: 0, x: 50, filter: "blur(10px)" },
+      { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.8, ease: "power2.out" }
+    );
+  }, [currentIndex, loading, events.length]);
+
+  // Modal Animation Logic
+  const modalWrapperRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+    if (selectedEvent) {
+      const tl = gsap.timeline();
+      tl.fromTo(modalWrapperRef.current, 
+        { opacity: 0, backdropFilter: "blur(0px)" },
+        { opacity: 1, backdropFilter: "blur(20px)", duration: 0.4 }
+      );
+      tl.fromTo(modalContentRef.current,
+        { y: 100, opacity: 0, scale: 0.95 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "expo.out" },
+        "-=0.2"
+      );
+      tl.from(".modal-stagger", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 0.5,
+        ease: "power2.out"
+      }, "-=0.4");
+    }
+  }, [selectedEvent]);
 
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY === 0) return;
-      e.preventDefault();
-      el.scrollLeft += e.deltaY;
-    };
+  const closeModal = () => {
+    gsap.to(modalContentRef.current, {
+      y: 50,
+      opacity: 0,
+      duration: 0.3,
+      onComplete: () => setSelectedEvent(null)
+    });
+  };
 
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, []);
-
-  if (!events.length) return null;
-
-  const duplicated = [...events, ...events];
+  if (loading || events.length === 0) return null;
 
   return (
-    <section 
-    id = "Events"
-     className="relative min-h-screen py-32 bg-[#000926] text-white overflow-hidden">
-      
-      
-      {/* BACKGROUND BLUR */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#0F52BA] opacity-[0.03] blur-[120px]" />
+    <section id="Events" className="relative min-h-[100vh] bg-[#010409] flex items-center overflow-hidden py-20 px-6 lg:px-16">
+      <InteractiveGrid />
 
-      {/* 🔥 BLUEPRINT GRID */}
-      <div 
-        className="absolute inset-0 opacity-[0.04] pointer-events-none z-0"
-        style={{ 
-          backgroundImage: `
-            linear-gradient(#0F52BA 1px, transparent 1px),
-            linear-gradient(90deg, #0F52BA 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px"
-        }} 
-      />
+      {/* 1. Rotating Orbital Arc (Left Side) */}
+      <div className="absolute left-[-40vw] lg:left-[-25vw] top-1/2 -translate-y-1/2 w-[90vw] h-[90vw] lg:w-[65vw] lg:h-[65vw] pointer-events-none">
+        <div ref={orbitalRef} className="relative w-full h-full border-2 border-[var(--accent-primary)]/20 rounded-full">
+           
+           {/* Tick Marks */}
+           {[...Array(12)].map((_, i) => (
+             <div 
+               key={i} 
+               className="absolute top-1/2 left-1/2 w-4 h-px bg-[var(--accent-primary)]/30 origin-left"
+               style={{ transform: `rotate(${i * 30}deg) translateX(calc(45vw - 20px)) lg:translateX(calc(32.5vw - 20px))` } as any}
+             />
+           ))}
 
-      <div className="max-w-7xl mx-auto px-10 md:px-20 relative z-10">
-        
-        {/* HEADER */}
-        <div className="mb-20 space-y-6 max-w-2xl">
-          <motion.div 
-             initial={{ width: 0 }}
-             whileInView={{ width: "48px" }}
-             className="h-[2px] bg-[#0F52BA]" 
-          />
-          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight">
-            Arc Journey
-          </h2>
-          <p className="text-slate-400 text-lg leading-relaxed">
-            Chronological milestones of workshops, experiments, and 
-            collaborative builds that shaped our robotics ecosystem.
-          </p>
-        </div>
+           {events.map((event, i) => {
+             const angle = (360 / events.length) * i;
+             const isActive = i === currentIndex;
 
-        {/* TIMELINE */}
-        <div className="relative">
-          
-          {/* LINE */}
-          <div className="absolute top-[160px] left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent z-[5]" />
-
-          {/* LEFT BUTTON */}
-          <button
-            onClick={() => scroll("left")}
-            className="
-              absolute left-6 top-1/2 -translate-y-1/2 z-[200]
-              w-14 h-14 flex items-center justify-center
-              bg-[#0F52BA]
-              shadow-[0_0_30px_rgba(15,82,186,0.8)]
-              border border-[#0F52BA]/60
-              rounded-full
-              text-white text-2xl
-              hover:scale-110
-              transition-all duration-300
-            "
-          >
-            ‹
-          </button>
-
-          {/* RIGHT BUTTON */}
-          <button
-            onClick={() => scroll("right")}
-            className="
-              absolute right-6 top-1/2 -translate-y-1/2 z-[200]
-              w-14 h-14 flex items-center justify-center
-              bg-[#0F52BA]
-              shadow-[0_0_30px_rgba(15,82,186,0.8)]
-              border border-[#0F52BA]/60
-              rounded-full
-              text-white text-2xl
-              hover:scale-110
-              transition-all duration-300
-            "
-          >
-            ›
-          </button>
-
-          {/* SCROLL */}
-          <div
-            ref={scrollRef}
-            className="
-              flex gap-20
-              overflow-x-auto
-              overflow-y-visible 
-              scrollbar-hide
-              pt-40
-              pb-80
-              relative
-              snap-x
-            "
-          >
-            {duplicated.map((event, index) => {
-              const isHovered = activeHoverIndex === index;
-
-              return (
-                <div
-                  key={`${event._id}-${index}`}
-                  className="relative min-w-[300px] flex flex-col items-center snap-center group"
-                  onMouseEnter={() => setActiveHoverIndex(index)}
-                  onMouseLeave={() => setActiveHoverIndex(null)}
-                  onClick={() => setSelectedEvent(event)}
-                >
-                  
-                  {/* DOT */}
-                  <motion.div
-                    animate={{
-                      scale: isHovered ? 1.4 : 1,
-                      backgroundColor: isHovered ? "#0F52BA" : "#1e293b",
-                    }}
-                    className="w-3 h-3 rounded-full relative z-10 ring-8 ring-[#000926]"
-                  >
-                    {isHovered && (
-                      <div className="absolute inset-0 rounded-full bg-[#0F52BA] animate-ping opacity-30" />
-                    )}
-                  </motion.div>
-
-                  {/* TITLE */}
-                  <div className="mt-10 text-center space-y-2 cursor-pointer">
-                    <motion.div 
-                      animate={{ color: isHovered ? "#0F52BA" : "rgba(148, 163, 184, 1)" }}
-                      className="text-[10px] font-mono tracking-widest uppercase"
-                    >
-                      {new Date(event.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </motion.div>
-
-                    <motion.div 
-                      animate={{ y: isHovered ? -2 : 0 }}
-                      className={`text-xl font-medium ${isHovered ? 'text-[#0F52BA]' : 'text-white'}`}
-                    >
-                      {event.title}
-                    </motion.div>
-                  </div>
-
-                  {/* HOVER CARD */}
-                  <div className="relative w-full mt-6 h-0 flex justify-center">
-                    <AnimatePresence>
-                      {isHovered && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 15 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          className="absolute top-0 w-72 bg-[#0B1228]/95 rounded-2xl p-2 border border-white/10 z-[100] pointer-events-none"
-                        >
-                          {event.image && (
-                            <img
-                              src={urlFor(event.image).width(400).url()}
-                              className="w-full h-40 object-cover rounded-xl"
-                            />
-                          )}
-                          <div className="p-4">
-                            <p className="text-xs text-slate-400">
-                              {event.description}
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                </div>
-              );
-            })}
-          </div>
+             return (
+               <div 
+                 key={event._id}
+                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
+                 style={{
+                   transform: `rotate(${angle}deg) translateX(calc(45vw - 2px)) lg:translateX(calc(32.5vw - 2px))`
+                 } as any}
+               >
+                 <div className={`relative flex items-center justify-center transition-all duration-700 ${isActive ? 'scale-[1.8]' : 'scale-75 opacity-20'}`}>
+                    <div className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl rounded-full" />
+                    <div className="relative w-16 h-16 lg:w-24 lg:h-24 rounded-full border-[3px] border-[var(--accent-primary)] overflow-hidden bg-black ring-4 ring-black">
+                       <div 
+                        style={{ transform: `rotate(${-angle + (currentIndex * (360/events.length))}deg)`}}
+                        className="w-full h-full transition-transform duration-1200"
+                       >
+                         <img 
+                          src={urlFor(event.image).width(400).url()} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                         />
+                       </div>
+                    </div>
+                 </div>
+               </div>
+             );
+           })}
         </div>
       </div>
 
-      {/* ORIGINAL MODAL */}
-      <AnimatePresence>
-        {selectedEvent && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70"
-            onClick={() => setSelectedEvent(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 40 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              transition={{ duration: 0.25 }}
-              className="
-                relative
-                w-[90%] max-w-2xl
-                bg-[#0B1228]
-                border border-white/10
-                rounded-2xl
-                overflow-hidden
-                shadow-[0_20px_60px_rgba(0,0,0,0.8)]
-              "
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="absolute top-4 right-4 text-white/70 hover:text-white text-xl z-10"
+      {/* 2. Content Display Area */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20">
+        <div className="lg:w-1/3 min-w-[300px] space-y-10">
+           <div className="flex items-center gap-4 text-[10px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.5em]">
+              <div className="w-10 h-px bg-[var(--accent-primary)]" />
+              <span>Log_Sequence_0{currentIndex + 1}</span>
+           </div>
+           
+           <h2 className="text-7xl lg:text-8xl font-mono font-bold italic text-white uppercase tracking-tighter leading-[0.8]">
+              MISSION <br /> <span className="text-[var(--accent-primary)]">LOG.</span>
+           </h2>
+
+           <div className="flex items-center gap-6 pt-6">
+              <button 
+                onClick={() => handleNavigate('prev')}
+                className="group relative flex items-center justify-center w-20 h-20 lg:w-24 lg:h-24 border border-white/5 hover:border-[var(--accent-primary)]/50 transition-all overflow-hidden"
               >
-                ✕
+                <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-[var(--accent-primary)]/[0.05]" />
+                <span className="relative text-[10px] font-mono text-white/40 group-hover:text-white">{"[ < PREV ]"}</span>
               </button>
 
-              {selectedEvent.image && (
-                <div className="relative h-64 w-full overflow-hidden">
-                  <img
-                    src={urlFor(selectedEvent.image).width(800).url()}
-                    className="w-full h-full object-cover opacity-90"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B1228] via-transparent to-transparent opacity-80" />
-                </div>
-              )}
+              <button 
+                onClick={() => handleNavigate('next')}
+                className="group relative flex items-center justify-center w-20 h-20 lg:w-24 lg:h-24 border border-white/5 hover:border-[var(--accent-primary)]/50 transition-all overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-[var(--accent-primary)]/[0.05]" />
+                <span className="relative text-[10px] font-mono text-white/40 group-hover:text-white">{"[ NEXT > ]"}</span>
+              </button>
+           </div>
+        </div>
 
-              <div className="p-8 space-y-4">
-                <h3 className="text-3xl font-semibold text-white">
-                  {selectedEvent.title}
-                </h3>
-
-                <p className="text-slate-400 leading-relaxed">
-                  {selectedEvent.detailedDescription || selectedEvent.description}
-                </p>
+        <div ref={displayRef} className="lg:w-2/3 w-full">
+           <div 
+             onClick={() => setSelectedEvent(events[currentIndex])}
+             className="group relative w-full max-w-3xl aspect-[16/10] lg:aspect-video glass-effect p-2 border border-white/5 cursor-pointer hover:border-[var(--accent-primary)]/40 transition-all duration-500 overflow-hidden"
+           >
+              <div className="absolute inset-0">
+                 <img src={urlFor(events[currentIndex].image).width(1200).url()} alt="" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-[2000ms]" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#010409] via-transparent to-transparent" />
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
+              <div className="relative h-full flex flex-col justify-end p-10 lg:p-16">
+                 <div className="space-y-4 max-w-xl">
+                    <span className="text-[10px] font-mono text-[var(--accent-primary)] tracking-[0.4em] uppercase font-bold">{new Date(events[currentIndex].date).toLocaleDateString()}</span>
+                    <h3 className="text-4xl lg:text-6xl font-mono font-bold italic text-white uppercase tracking-tighter leading-none">{events[currentIndex].title}</h3>
+                    <div className="pt-6 flex items-center gap-4 text-[9px] font-mono text-white/60 uppercase">
+                       <span>VIEW_DOSSIER</span>
+                       <div className="w-10 h-px bg-[var(--accent-primary)]" />
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* 3. Modal Overlay */}
+      {selectedEvent && (
+        <div ref={modalWrapperRef} className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/80 transition-all">
+           <div 
+             ref={modalContentRef} 
+             className="relative w-[95vw] lg:w-[80vw] h-[90vh] lg:h-[80vh] glass-effect border border-white/10 flex flex-col lg:flex-row overflow-hidden shadow-[0_0_150px_rgba(0,0,0,1)]"
+           >
+              <button 
+                onClick={closeModal}
+                className="absolute top-8 right-8 z-[600] text-white/50 hover:text-white font-mono text-xl"
+              >
+                {"[ X ]"}
+              </button>
+
+              <div className="lg:w-1/2 h-1/2 lg:h-full relative overflow-hidden">
+                <img src={urlFor(selectedEvent.image).width(1200).url()} alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#010409] hidden lg:block" />
+              </div>
+              
+              <div className="lg:w-1/2 h-1/2 lg:h-full p-10 lg:p-20 flex flex-col items-start overflow-y-auto custom-scrollbar">
+                 <div className="w-full space-y-10">
+                    <div className="space-y-4 modal-stagger">
+                       <span className="text-[10px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.6em] block">MISSION_RECORD // REF_{selectedEvent._id.slice(0,6)}</span>
+                       <h2 className="text-5xl lg:text-7xl font-mono font-bold text-white uppercase italic tracking-tighter leading-none break-words w-full">
+                         {selectedEvent.title}
+                       </h2>
+                    </div>
+                    
+                    <div className="h-px w-full bg-white/5 modal-stagger" />
+                    
+                    <div className="space-y-6 modal-stagger">
+                       <div className="flex gap-8 text-[10px] font-mono text-white/40 uppercase">
+                          <span>Date: {new Date(selectedEvent.date).toLocaleDateString()}</span>
+                       </div>
+                       <p className="text-sm lg:text-base text-white/60 font-mono leading-relaxed">{selectedEvent.detailedDescription || selectedEvent.description}</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </section>
   );
 }

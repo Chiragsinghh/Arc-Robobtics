@@ -9,46 +9,27 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function Philosophy() {
   const sectionRef = useRef<HTMLElement>(null);
-  const imageContainerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // 1. Initial State: Title & Points slide up
       gsap.from(".ph-reveal", {
-        y: 60,
+        y: 30,
         opacity: 0,
-        stagger: 0.15,
-        duration: 1,
-        ease: "power3.out",
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "power2.out",
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top 70%",
+          start: "top 75%",
         }
       });
 
-      // 2. Parallax effect for images
-      gsap.to(".ph-circle", {
-        y: -40,
+      gsap.to(".blueprint-dot", {
+        opacity: 0.2,
         duration: 2,
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1,
-        }
-      });
-
-      // 3. Robotic divider line animation
-      gsap.from(".ph-divider", {
-        width: 0,
-        duration: 1.5,
-        ease: "expo.out",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 60%",
-        }
+        repeat: -1,
+        yoyo: true,
+        stagger: { amount: 3, from: "random" }
       });
     }, sectionRef);
 
@@ -59,81 +40,99 @@ export default function Philosophy() {
     <section
       ref={sectionRef}
       id="philosophy"
-      className="relative px-6 lg:px-16 py-32 bg-[#f1f5f9] overflow-hidden"
+      className="relative px-6 lg:px-16 py-40 bg-[#f8fafc] overflow-hidden text-[#010409]"
     >
-      {/* Blueprint Grid Overlay (Subtle) */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none blueprint-grid" />
+      {/* Blueprint Grid Markers */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+         <div className="absolute top-10 left-10 text-[8px] font-mono uppercase tracking-[0.5em] text-black/20">COORD: 25.4358 // 81.8463</div>
+         <div className="absolute bottom-10 right-10 text-[8px] font-mono uppercase tracking-[0.5em] text-black/20">CORE_LOGIC: v4.0.0_S</div>
+         <div className="absolute inset-0 overflow-hidden">
+            {[...Array(40)].map((_, i) => (
+              <div 
+                key={i} 
+                className="blueprint-dot absolute w-1 h-1 bg-black/[0.08] rounded-full"
+                style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
+              />
+            ))}
+         </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-32 items-center relative z-10">
         
-        {/* IMAGES: Full Circle & Responsive */}
-        <div ref={imageContainerRef} className="relative flex justify-center items-center h-[400px] lg:h-[600px] order-2 lg:order-1">
-          {/* Main ARC Image Circle */}
-          <div className="ph-circle relative w-64 h-64 lg:w-96 lg:h-96 rounded-full overflow-hidden border-[8px] border-white shadow-2xl z-20">
+        {/* IMAGES: Full Circle Satellite Layout */}
+        <div className="relative flex justify-center items-center h-[500px] lg:h-[700px] order-2 lg:order-1">
+          {/* Outer Orbit */}
+          <div className="absolute w-[85%] aspect-square border border-black/[0.05] rounded-full animate-[spin_50s_linear_infinite]" />
+          
+          {/* Main Core */}
+          <div className="relative w-72 h-72 lg:w-[480px] lg:h-[480px] rounded-full overflow-hidden border-[1px] border-black/10 shadow-[0_40px_100px_rgba(0,0,0,0.08)] z-20 group">
             <Image
               src="/images/logos/arc-logo.jpg"
               alt="ARC Robotics Core"
               fill
-              className="object-cover"
+              className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
             />
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
           </div>
 
-          {/* College Logo Circle (Satellite) */}
-          <div className="ph-circle absolute top-0 right-10 lg:right-20 w-32 h-32 lg:w-48 lg:h-48 rounded-full overflow-hidden border-[6px] border-white shadow-xl z-20 bg-white">
+          {/* Sub Core (Satellite) */}
+          <div className="absolute -top-6 -right-4 lg:-top-16 lg:-right-4 w-44 h-44 lg:w-60 lg:h-60 rounded-full overflow-hidden border-[1px] border-black/5 shadow-2xl z-30 bg-white p-6">
             <Image
               src="/images/logos/iiitkotalogo.webp"
               alt="Affiliate Institution"
               fill
-              className="object-contain p-4"
+              className="object-contain p-8 lg:p-12 opacity-80"
             />
           </div>
 
-          {/* Geometric Accents */}
-          <div className="absolute w-[110%] h-[110%] border border-black/[0.03] rounded-full scale-90" />
-          <div className="absolute w-[80%] h-[80%] border-2 border-dashed border-[var(--accent-primary)]/10 rounded-full animate-[spin_60s_linear_infinite]" />
+          {/* Technical Data Thread */}
+          <div className="absolute bottom-10 -left-10 lg:-left-20 flex items-center gap-4 rotate-[-90deg]">
+             <div className="w-16 h-px bg-black/20" />
+             <span className="text-[9px] font-mono text-black/40 uppercase tracking-[0.6em]">System_Integrity_v4</span>
+          </div>
         </div>
 
-        {/* CONTENT: Robotic Vibe */}
-        <div ref={contentRef} className="space-y-12 order-1 lg:order-2">
-          <div className="space-y-6">
-            <div className="ph-reveal flex items-center gap-4 text-[11px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.5em] font-bold">
-              <span>01 // MISSION_STAT</span>
-              <div className="ph-divider h-px bg-[var(--accent-primary)] flex-1 max-w-[100px]" />
+        {/* CONTENT */}
+        <div className="space-y-16 order-1 lg:order-2">
+          <div className="space-y-8">
+            <div className="ph-reveal flex items-center gap-4 text-[11px] font-mono text-[var(--accent-primary)] uppercase tracking-[0.8em] font-bold">
+              <span>MANIFESTO</span>
+              <div className="h-px bg-[var(--accent-primary)] w-24" />
             </div>
 
-            <h2 className="ph-reveal text-4xl lg:text-5xl font-mono font-bold tracking-tighter text-[#0f172a] leading-[0.9] uppercase italic">
+            <h2 className="ph-reveal text-5xl lg:text-8xl font-mono font-bold tracking-tighter text-[#0f172a] leading-[0.8] uppercase italic">
               ENGINEERING <br />
-              <span className="text-[var(--accent-primary)]">AUTONOMOUS</span> <br />
-              INTEGRITY.
+              <span className="text-[var(--accent-primary)] text-6xl lg:text-9xl">PRECISION.</span> <br />
+              DEFINING LOGIC.
             </h2>
 
-            <p className="ph-reveal text-lg text-slate-500 font-mono leading-relaxed max-w-lg">
-              {">"} Initializing core philosophy...
-              <br />
-              {">"} ARC Robotics isn&apos;t a hobby; it&apos;s a high-precision framework. We leverage industrial-grade systems thinking to solve physical complexity.
+            <p className="ph-reveal text-base lg:text-xl text-slate-500 font-mono leading-relaxed max-w-xl">
+              {"//"} INITIALIZING CORE FRAMEWORK...
+              <br /><br />
+              ARC Robotics is not a collective, it is an industrial-grade framework. We operate at the intersection of kinematic potential and deterministic code.
             </p>
           </div>
 
-          {/* Robotic List */}
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-8">
             {[
-              { label: "Architecture", value: "Hardware & Software Co-Design" },
-              { label: "Validation", value: "Iterative Rapid Prototyping" },
-              { label: "Reliability", value: "Mission-Critical Precision" }
+              { id: "01", label: "Structural Synthesis", value: "Hardware/Software Co-Design" },
+              { id: "02", label: "Kinematic Validation", value: "Iterative Robotic Execution" },
+              { id: "03", label: "Autonomous Command", value: "Real-time Spatial Awareness" }
             ].map((stat, i) => (
-              <div key={i} className="ph-reveal group flex items-end justify-between border-b border-black/[0.05] pb-4">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{stat.label}</span>
-                <span className="text-sm font-bold font-mono text-[#0f172a] tracking-tight group-hover:text-[var(--accent-primary)] transition-colors">
+              <div key={i} className="ph-reveal group flex flex-col gap-3 border-l-2 border-black/[0.05] hover:border-[var(--accent-primary)] pl-10 py-2 transition-all">
+                <span className="text-[10px] font-mono text-[var(--accent-primary)] uppercase tracking-widest">{stat.id}__{stat.label}</span>
+                <span className="text-2xl font-bold font-mono text-slate-900 tracking-tight leading-none uppercase italic">
                   {stat.value}
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="ph-reveal pt-6">
-             <div className="inline-flex items-center gap-4 px-6 py-3 border border-black/10 rounded-full text-[10px] font-mono uppercase tracking-[0.3em] text-slate-600 hover:bg-black hover:text-white transition-all cursor-crosshair">
-                Exec_Protocol_Alpha
-             </div>
+          <div className="ph-reveal pt-10">
+             <button className="group flex items-center gap-6 px-12 py-6 border border-black/10 bg-white hover:bg-black hover:text-white transition-all overflow-hidden relative">
+                <span className="relative z-10 text-[11px] font-mono uppercase tracking-[0.5em] font-bold">Access_Protocol_Alpha</span>
+                <div className="absolute inset-0 w-0 group-hover:w-full bg-black transition-all duration-300" />
+             </button>
           </div>
         </div>
       </div>
